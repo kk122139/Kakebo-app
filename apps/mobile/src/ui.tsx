@@ -15,7 +15,13 @@ export const colors = {
   line: "#DDD9CF",
   white: "#FFFFFF",
 };
-export const money = (n: number) => "$" + n.toLocaleString("es-CL");
+export function money(value: number | string | null | undefined): string {
+  if (value === null || value === undefined) return "—";
+  if (typeof value !== "number" && typeof value !== "string") return "—";
+  if (typeof value === "string" && value.trim() === "") return "—";
+  const amount = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(amount) ? "$" + amount.toLocaleString("es-CL") : "—";
+}
 export function Button({
   title,
   onPress,
