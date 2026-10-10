@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "Kakebo",
+    "slug": "kakebo-mvp",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "plugins": ["expo-secure-store"],
+    "android": {
+      "package": "cl.kakebo.mvp"
+    },
+    "ios": {
+      "bundleIdentifier": "cl.kakebo.mvp"
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
