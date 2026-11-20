@@ -49,3 +49,34 @@ test("Nest conserva metadatos DTO para validación en runtime", () => {
   );
   assert.equal(params[1], BudgetDto);
 });
+
+test("gastos validan método de pago y clasificación sin romper clientes anteriores", async () => {
+  const base = {
+    amount: 100,
+    date: "2026-11-17",
+    description: "Compra",
+    category: "Ocio",
+  };
+  assert.equal((await validate(plainToInstance(ExpenseDto, base))).length, 0);
+  assert.equal(
+    (
+      await validate(
+        plainToInstance(ExpenseDto, {
+          ...base,
+          paymentMethod: "Efectivo",
+          necessary: false,
+        }),
+      )
+    ).length,
+    0,
+  );
+  const errors = await validate(
+    plainToInstance(ExpenseDto, {
+      ...base,
+      paymentMethod: "Otro",
+      necessary: "false",
+    }),
+  );
+  assert(errors.some((e) => e.property === "paymentMethod"));
+  assert(errors.some((e) => e.property === "necessary"));
+});

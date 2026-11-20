@@ -23,4 +23,11 @@ Todos los endpoints financieros requieren `Authorization: Bearer <accessToken>`.
 | GET    | /closures                | Historial del usuario                        |
 | GET    | /health                  | Comprueba PostgreSQL                         |
 
-El backend rechaza datos adicionales, montos inválidos, UUID inválidos, fechas inexistentes, costos+ahorro mayores al ingreso y operaciones sobre meses cerrados. Eliminar gastos no exige confirmación adicional en esta base; agregar diálogo al desarrollar UX final.
+El backend rechaza datos adicionales, montos inválidos, UUID inválidos, fechas inexistentes, costos+ahorro mayores al ingreso y operaciones sobre meses cerrados. La interfaz solicita confirmación antes de eliminar gastos.
+
+## Extensión de diseño - 2026-11-17
+
+- GET /analysis?week=AAAA-MM-DD requiere la fecha de un lunes. Devuelve weekStart, weekEnd, total, previousTotal, changePercent, count, impulsiveCount, classifiedCount y categories (category, total, percent). La consulta filtra por el usuario autenticado y comprende la semana seleccionada y la anterior. changePercent es null cuando no hubo gastos en la semana anterior.
+- POST /expenses acepta además paymentMethod (Efectivo, Tarjeta de débito, Tarjeta de crédito o Transferencia) y necessary (booleano). Ambos son opcionales para conservar compatibilidad con clientes anteriores.
+- GET /expenses incluye paymentMethod y necessary. NULL significa que no se registró ese dato; no equivale a false.
+- Aplicar schema.sql con db:migrate antes de usar la nueva versión. Incorpora columnas sin modificar gastos existentes.

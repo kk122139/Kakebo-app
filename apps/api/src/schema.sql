@@ -19,6 +19,10 @@ CREATE TABLE IF NOT EXISTS expenses (
  description TEXT NOT NULL, date DATE NOT NULL, created_at TIMESTAMPTZ DEFAULT now(),
  FOREIGN KEY(user_id,month) REFERENCES budgets(user_id,month)
 );
+-- Idempotent upgrade for databases created before payment and habit tracking.
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS payment_method TEXT
+ CHECK(payment_method IN ('Efectivo','Tarjeta de débito','Tarjeta de crédito','Transferencia'));
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS necessary BOOLEAN;
 CREATE INDEX IF NOT EXISTS expenses_owner_month ON expenses(user_id,month);
 CREATE TABLE IF NOT EXISTS goals (
  id UUID PRIMARY KEY, user_id UUID NOT NULL REFERENCES users(id), name TEXT NOT NULL,

@@ -19,6 +19,7 @@ import { randomUUID } from "node:crypto";
 import { db, transaction, event } from "./db";
 import { AuthGuard } from "./auth";
 import { balance, projection } from "./finance";
+import { weeklyAnalysis, weeklyBounds } from "./weekly";
 import {
   BudgetDto,
   ExpenseDto,
@@ -65,6 +66,24 @@ async function summary(c: any, userId: string, month: string) {
 @UseGuards(AuthGuard)
 @Controller()
 export class FinanceController {
+  @Get("analysis") async analysis(@Req() r: any, @Query("week") week: string) {
+    let bounds: ReturnType<typeof weeklyBounds>;
+    try {
+      bounds = weeklyBounds(week || "");
+    } catch {
+      throw new BadRequestException(
+        "Semana inválida: usa la fecha de un lunes (AAAA-MM-DD)",
+      );
+    }
+    const { rows } = await db.query(
+      "SELECT amount::text,category,to_char(date,'YYYY-MM-DD') AS date,necessary FROM expenses WHERE user_id=$1 AND date >= $2::date AND date <= $3::date",
+      [r.userId, bounds.previousStart, bounds.weekEnd],
+    );
+    return weeklyAnalysis(
+      week,
+      rows.map((x) => ({ ...x, amount: Number(x.amount) })),
+    );
+  }
   @Put("profile/objective") async objective(
     @Req() r: any,
     @Body() d: ObjectiveDto,
@@ -106,7 +125,7 @@ export class FinanceController {
     monthValid(m);
     return (
       await db.query(
-        "SELECT id,amount::text,category,description,to_char(date,'YYYY-MM-DD') AS date FROM expenses WHERE user_id=$1 AND month=$2 ORDER BY date DESC,created_at DESC",
+        "SELECT id,amount::text,category,description,to_char(date,'YYYY-MM-DD') AS date,payment_method AS \"paymentMethod\",necessary FROM expenses WHERE user_id=$1 AND month=$2 ORDER BY date DESC,created_at DESC",
         [r.userId, m],
       )
     ).rows.map((x) => ({ ...x, amount: Number(x.amount) }));
@@ -128,8 +147,18 @@ export class FinanceController {
       if (rows[0].closed) throw new ConflictException("Mes cerrado");
       const id = randomUUID();
       await c.query(
-        "INSERT INTO expenses(id,user_id,month,amount,category,description,date) VALUES($1,$2,$3,$4,$5,$6,$7)",
-        [id, r.userId, month, d.amount, d.category, d.description, d.date],
+        "INSERT INTO expenses(id,user_id,month,amount,category,description,date,payment_method,necessary) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)",
+        [
+          id,
+          r.userId,
+          month,
+          d.amount,
+          d.category,
+          d.description,
+          d.date,
+          d.paymentMethod ?? null,
+          d.necessary ?? null,
+        ],
       );
       await event(c, r.userId, "expense.created", { id, ...d });
       return { id };

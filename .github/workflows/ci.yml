@@ -12,4 +12,5 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm test
+      - run: node --test apps/mobile/tests/api.test.cjs
       - run: npm run typecheck

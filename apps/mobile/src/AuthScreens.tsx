@@ -257,7 +257,7 @@ export function AuthScreens(p: Props) {
   );
 }
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: "white" },
+  page: { flex: 1, backgroundColor: "#FCF5EC" },
   content: {
     width: "100%",
     maxWidth: 460,
@@ -287,6 +287,7 @@ const styles = StyleSheet.create({
     borderColor: "#AAA",
     borderRadius: 9,
     minHeight: 50,
+    backgroundColor: "white",
     paddingHorizontal: 13,
     marginBottom: 24,
   },

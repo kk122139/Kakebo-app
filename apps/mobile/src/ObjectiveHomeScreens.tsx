@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   ActivityIndicator,
   Alert,
   Image,
-  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -14,6 +13,8 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, money } from "./ui";
+import { BottomNav } from "./FinanceScreens";
+import { monthLabel } from "./financeModel";
 const leaves = require("../assets/hojas.png");
 const glyphs = {
   bell: require("../assets/home-icons/bell.png"),
@@ -47,6 +48,7 @@ const choices = [
   { icon: "⭐", label: "Conocer mis hábitos" },
 ];
 type Summary = {
+  month?: string;
   income: number;
   fixed: number;
   saving: number;
@@ -113,7 +115,6 @@ function Action({
 export function ObjectiveHomeScreens(p: Props) {
   const insets = useSafeAreaInsets(),
     { height, width } = useWindowDimensions();
-  const [more, setMore] = useState(false);
   const objective = p.screen === "objective";
   const scale = Math.max(0.8, Math.min(1.15, width / 390));
   const ratio = (n: number) =>
@@ -162,7 +163,7 @@ export function ObjectiveHomeScreens(p: Props) {
           {
             paddingTop: insets.top + 14,
             paddingBottom: objective ? insets.bottom + 36 : 110 + insets.bottom,
-            minHeight: height,
+            minHeight: objective ? height : undefined,
           },
         ]}
       >
@@ -213,13 +214,15 @@ export function ObjectiveHomeScreens(p: Props) {
           </>
         ) : (
           <>
-            <View style={[st.header, { marginTop: 68 * scale }]}>
+            <View style={[st.header, { marginTop: 26 * scale }]}>
               <View style={{ flex: 1 }}>
                 <Text style={st.greeting}>
                   Hola, {p.name.split(" ")[0] || "bienvenido"}
                 </Text>
                 <Text style={st.subtitle}>
-                  Aquí está tu resumen de este mes
+                  {p.summary?.month
+                    ? "Tu resumen de " + monthLabel(p.summary.month)
+                    : "Aquí está tu resumen de este mes"}
                 </Text>
               </View>
               <Pressable
@@ -302,7 +305,7 @@ export function ObjectiveHomeScreens(p: Props) {
                     label={
                       p.summary.closed ? "Mes cerrado" : "+ Registrar Gasto"
                     }
-                    onPress={() => p.onNavigate("expenses")}
+                    onPress={() => p.onNavigate("categories")}
                     disabled={p.summary.closed}
                   />
                 </View>
@@ -332,72 +335,13 @@ export function ObjectiveHomeScreens(p: Props) {
         )}
       </ScrollView>
       {!objective && (
-        <View style={[st.nav, { paddingBottom: Math.max(10, insets.bottom) }]}>
-          {[
-            { label: "Inicio", icon: "home", screen: "home" },
-            { label: "Gastos", icon: "money", screen: "expenses" },
-            { label: "Presupuesto", icon: "bank", screen: "budget" },
-            { label: "Análisis", icon: "chart", screen: "closure" },
-            { label: "Más", icon: "list", screen: "more" },
-          ].map((tab) => (
-            <Pressable
-              key={tab.label}
-              accessibilityRole="button"
-              accessibilityState={{ selected: tab.screen === "home" }}
-              onPress={() =>
-                tab.screen === "more" ? setMore(true) : p.onNavigate(tab.screen)
-              }
-              style={st.navItem}
-            >
-              <Glyph name={tab.icon as keyof typeof glyphs} />
-              <Text style={st.navLabel}>{tab.label}</Text>
-            </Pressable>
-          ))}
-        </View>
+        <BottomNav screen="home" onNavigate={p.onNavigate} disabled={p.busy} />
       )}
-      <Modal
-        visible={more}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setMore(false)}
-      >
-        <Pressable style={st.overlay} onPress={() => setMore(false)}>
-          <Pressable
-            style={[st.menu, { paddingBottom: 24 + insets.bottom }]}
-            onPress={() => {}}
-          >
-            <Text style={st.greeting}>Más opciones</Text>
-            {[
-              { label: "Metas de ahorro", screen: "goals" },
-              { label: "Cierre mensual", screen: "closure" },
-            ].map((item) => (
-              <Action
-                key={item.screen}
-                label={item.label}
-                onPress={() => {
-                  setMore(false);
-                  p.onNavigate(item.screen);
-                }}
-              />
-            ))}
-            <Action
-              label="Cerrar sesión"
-              onPress={() => {
-                setMore(false);
-                p.onLogout();
-              }}
-            />
-            <Pressable onPress={() => setMore(false)} style={{ padding: 12 }}>
-              <Text style={st.subtitle}>Cancelar</Text>
-            </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
     </View>
   );
 }
 const st = StyleSheet.create({
-  page: { flex: 1, backgroundColor: "#FFF", overflow: "hidden" },
+  page: { flex: 1, backgroundColor: "#FCF5EC", overflow: "hidden" },
   content: {
     width: "100%",
     maxWidth: 520,

@@ -12,6 +12,7 @@ import {
   IsIn,
   IsOptional,
   IsUUID,
+  IsBoolean,
 } from "class-validator";
 export class RegisterDto {
   @ApiProperty() @IsEmail() @MaxLength(254) email!: string;
@@ -48,6 +49,27 @@ export class BudgetDto {
   @ApiProperty() @IsInt() @Min(0) @Max(1000000000000) saving!: number;
 }
 export class ExpenseDto {
+  @ApiProperty({
+    required: false,
+    enum: [
+      "Efectivo",
+      "Tarjeta de débito",
+      "Tarjeta de crédito",
+      "Transferencia",
+    ],
+  })
+  @IsOptional()
+  @IsIn([
+    "Efectivo",
+    "Tarjeta de débito",
+    "Tarjeta de crédito",
+    "Transferencia",
+  ])
+  paymentMethod?: string;
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsBoolean()
+  necessary?: boolean;
   @ApiProperty() @IsInt() @Min(1) @Max(1000000000000) amount!: number;
   @ApiProperty()
   @IsIn(["Supervivencia", "Ocio", "Cultura", "Extras"])

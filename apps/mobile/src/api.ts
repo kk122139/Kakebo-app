@@ -20,10 +20,19 @@ export async function clearSession() {
   if (Platform.OS !== "web")
     await SecureStore.deleteItemAsync("kakebo.refresh");
 }
+async function sessionFetch(url: string, init: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 12000);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
 async function renew() {
   if (!refresh) return false;
   try {
-    const res = await fetch(base + "/auth/refresh", {
+    const res = await sessionFetch(base + "/auth/refresh", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken: refresh }),
@@ -46,11 +55,13 @@ export async function restore() {
 export async function logout() {
   try {
     if (refresh)
-      await fetch(base + "/auth/logout", {
+      await sessionFetch(base + "/auth/logout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refreshToken: refresh }),
       });
+  } catch {
+    // Even offline, sign out locally; the remote refresh token expires normally.
   } finally {
     await clearSession();
   }
@@ -86,12 +97,22 @@ export async function api(
       });
     if (await refreshPending) return api(path, method, body, false);
   }
-  const data = await res.json().catch(() => ({}));
+  const raw = await res.text();
+  let data: any = null;
+  if (raw.trim()) {
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      throw new Error(
+        "La API devolvió una respuesta no válida. Intenta nuevamente.",
+      );
+    }
+  }
   if (!res.ok)
     throw new Error(
-      Array.isArray(data.message)
+      Array.isArray(data?.message)
         ? data.message.join(" · ")
-        : data.message || "No se pudo completar la operación",
+        : data?.message || "No se pudo completar la operación",
     );
   return data;
 }

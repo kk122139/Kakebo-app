@@ -4,3 +4,8 @@ dist/
 .env
 *.log
 coverage/
+
+.env.*
+!.env.example
+.codex-backups/
+.codex-preview/

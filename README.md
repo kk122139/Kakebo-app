@@ -72,7 +72,7 @@ El script `api` compila TypeScript antes de arrancar para conservar los metadato
 | `docs/`                              | Requisitos BDD, arquitectura, contratos y pendientes                                   |
 | `.github/workflows/ci.yml`           | Compilación, tipos y pruebas en GitHub Actions                                         |
 
-Para cambiar el estilo, empieza por `ui.tsx`. Para agregar una pantalla, separa un componente en `src/screens` y conéctalo desde `App.tsx`. Para agregar una regla financiera, empieza por `finance.ts` y una prueba. Para agregar un endpoint, define primero su DTO y controla el propietario con `userId`. Para un cambio SQL posterior, crea una migración versionada: el script inicial no actualiza tablas existentes.
+Para cambiar el estilo, empieza por `ui.tsx`. Para agregar una pantalla, separa un componente en `src/screens` y conéctalo desde `App.tsx`. Para agregar una regla financiera, empieza por `finance.ts` y una prueba. Para agregar un endpoint, define primero su DTO y controla el propietario con `userId`. Para un cambio SQL posterior, crea una migración versionada: el esquema actual incluye las columnas adicionales de gastos mediante ALTER TABLE idempotente; los cambios futuros deben conservar los datos existentes.
 
 ## Validaciones
 
@@ -80,6 +80,7 @@ Para cambiar el estilo, empieza por `ui.tsx`. Para agregar una pantalla, separa 
 npm test
 npm run build
 npm run typecheck
+node --test apps/mobile/tests/api.test.cjs
 ```
 
 Consulta `docs/VALIDACION.md` para saber qué se ejecutó y qué requiere pruebas en tu equipo.
@@ -104,3 +105,12 @@ Google/Apple, recuperación de contraseña por correo, biometría y notificacion
 ## Imágenes de inicio
 
 `src/IntroScreens.tsx` organiza la bienvenida y las tres pantallas introductorias. Usa `foto_inicial.png` como fondo, `foto_1.png` para hábitos, `foto_2.png` para ahorro y `foto_3.png` para el camino de vida. `src/ui.tsx` muestra `Logo.png` en las cabeceras de acceso, registro y objetivo. Puedes sustituir los archivos en `assets` conservando sus nombres. El fondo inicial ya incluye texto y logo, por eso no se superponen copias adicionales.
+
+
+## Estado de esta versión
+
+La actualización incluye pantallas financieras, navegación inferior compartida, análisis semanal, método de pago y necesidad de los gastos, además de la corrección del registro de gastos sin presupuesto. Los iconos de categorías provienen del diseño proporcionado.
+
+La persistencia actual utiliza PostgreSQL y MongoDB locales con Docker. Supabase todavía no está conectado; el siguiente trabajo es migrar PostgreSQL conservando la API NestJS y revisar el alojamiento de la auditoría.
+
+El esquema actualizado requiere ejecutar npm run db:migrate -w apps/api antes de utilizar los campos nuevos. Las pruebas del cliente HTTP también forman parte de CI. Consulta docs/VALIDACION.md para distinguir verificaciones históricas, pruebas con API simulada y el recorrido con PostgreSQL real.
